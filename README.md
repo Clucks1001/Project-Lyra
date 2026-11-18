@@ -1,93 +1,70 @@
 # Project Lyra
 
-A Windows screen sharing tool with a focused, no-nonsense interface. All-in-one: capture + view.
+**Version: 3.3.2** — creator: Lyra (discord: `echo_ducky`)
 
-**Version: 3.3.1**
+Project Lyra is an **automatic Minecraft cheat scanner**. Someone runs one command from GitHub, and it scans **only the Minecraft instance that is currently open** — no menu, no input, no screensharing from the tool. (You can still screenshare in your Discord call manually.)
 
-## How it works
+## What it does
 
-- **Share mode**: captures the primary screen (or a specific window by title via `user32` enumeration) with GDI+, encodes as JPEG, frames it as `int32 byte length + JPEG bytes`, and streams over TCP.
-- **View mode**: TCP listener, accepts the sender, buffers frames, and displays them in a borderless window with an FPS counter, fullscreen toggle, and close button.
+1. Finds the running `javaw.exe` / `java.exe` Minecraft process.
+2. Reads that process's command line to locate the **open instance's** mods folder
+   (PrismLauncher, MultiMC, CurseForge, Modrinth, GDLauncher, and classic `.minecraft`).
+3. Scans only that instance's mod JARs (plus any JARs on the Java classpath). Other Minecraft installs are ignored.
+4. For each JAR:
+   - Hashes it (SHA-1) and checks **Modrinth** to see if it's a legitimate published mod.
+   - Reads entry names, metadata, and class contents looking for cheat signatures.
+5. Sorts every mod into:
+   - **VERIFIED** — found on Modrinth, legitimate
+   - **FLAGGED** — strong cheat signatures found (or several suspicious signals) and not a known mod
+   - **UNKNOWN** — not on Modrinth, no strong signals (manual review)
+6. Prints a report and saves it to `%TEMP%\ProjectLyra-ScanReport.txt`.
 
-## Tough mode
+The scanner only **reads** process info and local mod files. It does not upload, transmit, inject, or modify anything.
 
-- `-Hard` (Share): red `LYRA GUARD` border + watermark burned into every frame.
-
-## Cheat client detection
-
-- Share mode checks the selected client's title **one client at a time** (via `-WindowTitle`).
-- Built-in string list + optional `-CheatStringsFile` override.
-- On match: prints `CHEAT CLIENT MATCHED` and auto-engages tough mode.
-
-## Versioning
-
-- Current version: **3.3.1**
-- Patch fixes / small tweaks → `3.3.2`
-- Bigger changes → `3.4.0`
-- Massive changes → `4.0.0`
-
-### Changelog
-
-- **3.3.1** — fixed View-mode listener constructor, fixed receiver/port parsing in Share mode, replaced the non-firing WPF timer with a WinForms timer, fixed window-capture drawing coordinates, formalized both launcher menus, added a branded receiver top bar.
-- **3.3.0** — cheat string detection, tough mode, branding, remote launcher.
-
-## Credits
-
-- **Lyra** — creator (discord: `echo_ducky`)
-- Built on GDI+ and pure stubbornness
-- Powered by PowerShell, .NET, and bad decisions
-
-## Run
-
-### Auto-download from GitHub (the one-liner)
+## The one-liner (auto scan)
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-Expression (Invoke-RestMethod 'https://raw.githubusercontent.com/Clucks1001/Project-Lyra/refs/heads/main/remote.ps1?cb=lyra331')"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-Expression (Invoke-RestMethod 'https://raw.githubusercontent.com/Clucks1001/Project-Lyra/refs/heads/main/remote.ps1?cb=lyra332')"
 ```
 
-The `?cb=` query string defeats GitHub's raw-file cache, so you always get the current version. `remote.ps1` then fetches a fresh copy of `ScreenShare.ps1` (with its own cache-buster + content check), shows a formal menu, asks for the target/port, and launches a **new window** running the tool.
+`remote.ps1` downloads `ModScanner.ps1` from the repo (with cache-busting) and launches it immediately. The scan of the open instance starts automatically.
 
-### Local launcher
+## Files on GitHub (root of `Clucks1001/Project-Lyra`)
 
-```powershell
-powershell.exe -NoProfile -STA -ExecutionPolicy Bypass -File .\screenshare\installer.ps1
-```
+| File | Purpose |
+|---|---|
+| `remote.ps1` | One-liner entry point — downloads and auto-runs the scanner |
+| `ModScanner.ps1` | The scanner itself |
+| `ScreenShare.ps1` | Old screensharing tool — kept, no longer used by the one-liner |
+| `installer.ps1` | Old local screenshare launcher — kept |
+| `README.md` | This file |
 
-### Direct
-
-View mode — run on the machine you want to see:
-
-```powershell
-powershell.exe -NoProfile -STA -ExecutionPolicy Bypass -File .\screenshare\ScreenShare.ps1 -Mode View -Port 19732
-```
-
-Share mode — run on the machine doing the sharing:
+## Direct / manual scan
 
 ```powershell
-powershell.exe -NoProfile -STA -ExecutionPolicy Bypass -File .\screenshare\ScreenShare.ps1 -Mode Share -ReceiverHost 192.168.1.50 -Port 19732 -Fps 10 -WindowTitle 'Chrome'
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\ModScanner.ps1
 ```
 
 Options:
-- `-ReceiverHost` (Share): receiver IP/hostname. Accepts `host` (uses `-Port`) or `host:port`.
-- `-WindowTitle` (Share): capture a window by exact title match. Empty = primary screen.
-- `-Quality` (Share): JPEG quality 1-100 (default 80).
-- `-Fps` (Share): frame rate (default 10).
-- `-Hard` (Share): tough mode — red `LYRA GUARD` border + watermark.
-- `-CheatStringsFile` (Share): path to a text file of cheat strings, one per line.
-- `-Port` (View/Share): TCP port (default 19732).
-- `-WindowWidth` / `-WindowHeight` (View): receiver window size (default 1280x720).
+- `-Mode Disk` — scan every discovered Minecraft mods folder instead of only the open instance
+- `-ModsPath "C:\path\to\.minecraft\mods"` — scan a specific folder
+- `-NoNetwork` — skip Modrinth lookups (offline; more UNKNOWN results)
+- `-ReportPath "C:\path\report.txt"` — choose where the report is saved
+
+## Versioning
+
+- Current: **3.3.2**
+- Patches → `3.3.3`, bigger changes → `3.4.0`, massive → `4.0.0`
 
 ## Status
 
-- [x] Primary screen capture
-- [x] Window capture by title
-- [x] JPEG encoding
-- [x] Receiver UI: borderless, FPS counter, fullscreen toggle, branded top bar
-- [x] Formal launcher menus (local + remote)
-- [x] Tough mode + Project Lyra branding
-- [x] Cheat string scanning + auto-tough
-- [x] Versioning scheme + credits
-- [ ] UDP transport for lower latency
-- [ ] Multi-client support / reconnection
-- [ ] Audio / clipboard sharing
-- [ ] Deeper process-based cheat detection
+- [x] Detect the running Minecraft instance (PrismLauncher / MultiMC / CurseForge / Modrinth / GDLauncher / classic)
+- [x] Scan only the open instance's mods (not every install)
+- [x] Modrinth verification by SHA-1
+- [x] Cheat signature scanning inside JARs
+- [x] Strong vs. weak signal scoring to reduce false positives
+- [x] VERIFIED / FLAGGED / UNKNOWN verdicts
+- [x] Local report file
+- [ ] GUI results dashboard
+- [ ] CurseForge verification
+- [ ] Signature list auto-updates

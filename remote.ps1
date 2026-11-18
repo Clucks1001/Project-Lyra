@@ -5,8 +5,8 @@
 .DESCRIPTION
     Downloads ScreenShare.ps1 from GitHub raw and launches it in the chosen mode.
 
-    Fetch this script with:
-    powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-Expression (Invoke-RestMethod 'https://raw.githubusercontent.com/Clucks1001/Project-Lyra/refs/heads/main/remote.ps1')"
+    Fetch this script with (the ?cb= part defeats GitHub's raw-file cache):
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-Expression (Invoke-RestMethod 'https://raw.githubusercontent.com/Clucks1001/Project-Lyra/refs/heads/main/remote.ps1?cb=lyra331')"
 #>
 $ErrorActionPreference = 'Stop'
 
@@ -31,15 +31,33 @@ $dest = Join-Path $destDir 'ScreenShare.ps1'
 
 Write-Host ''
 Write-Host 'Fetching the latest ScreenShare.ps1 from GitHub...'
-try {
-    Invoke-WebRequest -Uri $toolUrl -OutFile $dest -ErrorAction Stop
-    Write-Host 'Download complete.'
+
+# raw.githubusercontent.com can serve a cached copy, and Invoke-WebRequest
+# reuses a cached response too. A unique query string forces a fresh fetch,
+# and the content check rejects any stale file that still slips through.
+$downloadOk = $false
+for ($attempt = 1; $attempt -le 4 -and -not $downloadOk; $attempt++) {
+    $freshUrl = '{0}?cb={1}' -f $toolUrl, [guid]::NewGuid().ToString('N')
+    try {
+        Invoke-WebRequest -Uri $freshUrl -OutFile $dest -ErrorAction Stop
+        $body = Get-Content -Raw -LiteralPath $dest
+        $stale = ($body -like '*New-Object System.Net.Sockets.TcpListener*') -or
+                 ($body -notlike "*'$launcherVersion'*")
+        if ($stale) { throw 'downloaded file is an old cached copy' }
+        $downloadOk = $true
+    }
+    catch {
+        if ($attempt -lt 4) {
+            Write-Host ("Attempt {0} returned a stale copy - retrying..." -f $attempt)
+        }
+        else {
+            Write-Host ''
+            Write-Host ("ERROR: could not download a current copy of the tool.`nURL: {0}`nDetails: {1}" -f $toolUrl, $_.Exception.Message)
+            exit 1
+        }
+    }
 }
-catch {
-    Write-Host ''
-    Write-Host ("ERROR: could not download the tool.`nURL: {0}`nDetails: {1}" -f $toolUrl, $_.Exception.Message)
-    exit 1
-}
+Write-Host ("Download complete (v{0})." -f $launcherVersion)
 
 $validModes = @{ '1' = 'Share'; '2' = 'View' }
 do {

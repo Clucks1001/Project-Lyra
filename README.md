@@ -27,11 +27,10 @@ Our own screen sharing tool for Windows. All-in-one: capture + view.
   - Bigger ish changes -> `3.4.0`
   - Massive ones -> `4.0.0`
 
-## Credits (hardcoded)
+## Credits
 
 - **Lyra** - creator (discord: `echo_ducky`)
 - Built on GDI+ and pure stubbornness
-- Inspired by the Tesla SS Tools forensic lineage
 - Powered by PowerShell, .NET, and bad decisions
 
 ## Run

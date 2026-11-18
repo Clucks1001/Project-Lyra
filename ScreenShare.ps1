@@ -63,7 +63,6 @@ $script:CreatorName = 'Lyra'
 $script:CreatorDiscord = 'echo_ducky'
 $script:ExtraCredits = @(
     'Built on GDI+ and pure stubbornness'
-    'Inspired by the Tesla SS Tools forensic lineage'
     'Powered by PowerShell, .NET, and bad decisions'
 )
 

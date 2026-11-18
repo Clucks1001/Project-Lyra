@@ -42,10 +42,10 @@ A Windows screen sharing tool with a focused, no-nonsense interface. All-in-one:
 ### Auto-download from GitHub (the one-liner)
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-Expression (Invoke-RestMethod 'https://raw.githubusercontent.com/Clucks1001/Project-Lyra/refs/heads/main/remote.ps1')"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-Expression (Invoke-RestMethod 'https://raw.githubusercontent.com/Clucks1001/Project-Lyra/refs/heads/main/remote.ps1?cb=lyra331')"
 ```
 
-`remote.ps1` downloads `ScreenShare.ps1` from the same repo, shows a formal menu, asks for the target/port, and launches a **new window** running the tool.
+The `?cb=` query string defeats GitHub's raw-file cache, so you always get the current version. `remote.ps1` then fetches a fresh copy of `ScreenShare.ps1` (with its own cache-buster + content check), shows a formal menu, asks for the target/port, and launches a **new window** running the tool.
 
 ### Local launcher
 

@@ -17,10 +17,10 @@ Add-Type -AssemblyName System.Drawing
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName WindowsBase
 
-$owner = 'OWNER'
-$repo = 'REPO'
+$owner = 'Clucks1001'
+$repo = 'Project-Lyra'
 $branch = 'main'
-$toolUrl = "https://raw.githubusercontent.com/$owner/$repo/refs/heads/$branch/screenshare/ScreenShare.ps1"
+$toolUrl = "https://raw.githubusercontent.com/$owner/$repo/refs/heads/$branch/ScreenShare.ps1"
 
 Write-Host 'Project Lyra - remote launcher'
 

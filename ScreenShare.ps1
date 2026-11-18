@@ -295,8 +295,7 @@ if ($Mode -eq 'Share') {
 if ($Mode -eq 'View') {
     $script:frameReady = $false
     $script:pendingFrame = $null
-    $script:listener = New-Object System.Net.Sockets.TcpListener
-    $script:listener.Start([System.Net.IPAddress]::Any, $Port)
+    $script:listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Any, $Port)
 
     Write-Host ("{0} v{1}" -f $script:AppName, $script:AppVersion)
     Write-Host ("Creator: {0} (discord: {1})" -f $script:CreatorName, $script:CreatorDiscord)
